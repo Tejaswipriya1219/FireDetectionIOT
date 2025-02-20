@@ -1,0 +1,59 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+// Pin definitions for NodeMCU (ESP8266)
+#define FIRE_SENSOR_1 D1   // Fire sensor 1 connected to D1
+#define FIRE_SENSOR_2 D2   // Fire sensor 2 connected to D2
+#define BUZZER       D3    // Buzzer connected to D3
+#define MOTOR        D4    // Water pump (BO motor) connected to D4
+
+// WiFi credentials
+char ssid[] = "YourWiFiSSID";        // Replace with your WiFi SSID
+char pass[] = "YourWiFiPassword";    // Replace with your WiFi Password
+
+// Blynk authentication token
+char auth[] = "YourBlynkAuthToken";  // Replace with your Blynk Auth Token
+
+void setup() {
+  Serial.begin(115200);         // Start serial communication at 115200 baud rate
+  Blynk.begin(auth, ssid, pass);// Initialize Blynk connection
+
+  // Initialize pin modes
+  pinMode(FIRE_SENSOR_1, INPUT);
+  pinMode(FIRE_SENSOR_2, INPUT);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(MOTOR, OUTPUT);
+
+  // Ensure buzzer and motor are off at startup
+  digitalWrite(BUZZER, LOW);
+  digitalWrite(MOTOR, LOW);
+
+  Serial.println("System Initialized...");
+}
+
+void loop() {
+  Blynk.run();  // Handles all Blynk-related tasks
+  
+  // Read the state of fire sensors
+  int fire1 = digitalRead(FIRE_SENSOR_1);
+  int fire2 = digitalRead(FIRE_SENSOR_2);
+
+  // If either sensor detects fire (assuming LOW = fire detected)
+  if (fire1 == LOW || fire2 == LOW) {
+    Serial.println("Fire Detected!");
+    
+    // Activate buzzer and motor
+    digitalWrite(BUZZER, HIGH);
+    digitalWrite(MOTOR, HIGH);
+
+    // Send notification to Blynk
+    Blynk.notify("🔥 Fire Detected! Taking action...");
+  } 
+  else {
+    // No fire detected, ensure buzzer and motor are off
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(MOTOR, LOW);
+  }
+
+  delay(500);  // Add a small delay to avoid rapid toggling
+}
